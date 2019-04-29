@@ -51,8 +51,7 @@ var (
 )
 
 type response struct {
-	AutoFollowStats map[string]interface{} `json:"auto_follow_stats"`
-	FollowStats     struct {
+	FollowStats struct {
 		Indices []struct {
 			Shards []map[string]interface{} `json:"shards"`
 		} `json:"indices"`
