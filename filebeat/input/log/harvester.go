@@ -261,6 +261,16 @@ func (h *Harvester) Run() error {
 		}
 
 		message, err := h.reader.Next()
+
+		// Get copy of state to work on
+		// This is important in case sending is not successful so on shutdown
+		// the old offset is reported
+		state := h.getState()
+
+		// always save state.Offset
+		state.Offset += int64(message.Bytes)
+		h.state = state
+
 		if err != nil {
 			switch err {
 			case ErrFileTruncate:
@@ -283,18 +293,14 @@ func (h *Harvester) Run() error {
 			return nil
 		}
 
+
 		// Strip UTF-8 BOM if beginning of file
 		// As all BOMS are converted to UTF-8 it is enough to only remove this one
 		if h.state.Offset == 0 {
 			message.Content = bytes.Trim(message.Content, "\xef\xbb\xbf")
 		}
 
-		// Get copy of state to work on
-		// This is important in case sending is not successful so on shutdown
-		// the old offset is reported
-		state := h.getState()
 		startingOffset := state.Offset
-		state.Offset += int64(message.Bytes)
 
 		// Create state event
 		data := util.NewData()
