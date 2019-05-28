@@ -267,6 +267,12 @@ func (h *Harvester) Run() error {
 		// the old offset is reported
 		state := h.getState()
 
+		// Strip UTF-8 BOM if beginning of file
+		// As all BOMS are converted to UTF-8 it is enough to only remove this one
+		if h.state.Offset == 0 {
+			message.Content = bytes.Trim(message.Content, "\xef\xbb\xbf")
+		}
+
 		// always save state.Offset
 		state.Offset += int64(message.Bytes)
 		h.state = state
@@ -291,13 +297,6 @@ func (h *Harvester) Run() error {
 				logp.Err("Read line error: %v; File: %v", err, h.state.Source)
 			}
 			return nil
-		}
-
-
-		// Strip UTF-8 BOM if beginning of file
-		// As all BOMS are converted to UTF-8 it is enough to only remove this one
-		if h.state.Offset == 0 {
-			message.Content = bytes.Trim(message.Content, "\xef\xbb\xbf")
 		}
 
 		startingOffset := state.Offset
